@@ -1013,4 +1013,4 @@ def get_all_pokemon_types() -> ArrayR[Pokemon]:
 
 
 if __name__ == '__main__':
-    pass
+    print(get_all_pokemon_types())

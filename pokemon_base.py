@@ -4,6 +4,7 @@ This module contains PokeType, TypeEffectiveness and an abstract version of the 
 from abc import ABC
 from enum import Enum
 from data_structures.referential_array import ArrayR
+import csv
 
 class PokeType(Enum):
     """
@@ -42,13 +43,20 @@ class TypeEffectiveness:
         Returns:
             float: The effectiveness of the attack, as a float value between 0 and 4.
         """
-        raise NotImplementedError
-
+        with open('type_effectiveness.csv', 'r') as file:
+            reader = csv.reader(file)
+            type_effectiveness = list(reader)
+        
+        attack_index = attack_type.value
+        defend_index = defend_type.value
+        effectiveness = type_effectiveness[attack_index + 1][defend_index]
+        
+        return effectiveness
     def __len__(self) -> int:
         """
         Returns the number of types of Pokemon
         """
-        raise NotImplementedError
+        return len(PokeType)
 
 
 class Pokemon(ABC): # pylint: disable=too-few-public-methods, too-many-instance-attributes
@@ -150,7 +158,7 @@ class Pokemon(ABC): # pylint: disable=too-few-public-methods, too-many-instance-
         """
         return self.battle_power
 
-    def attack(self, other_pokemon) -> float:
+    def attack(self, other_pokemon) -> int:
         """
         Calculates and returns the damage that this Pokemon inflicts on the
         other Pokemon during an attack.
@@ -161,7 +169,9 @@ class Pokemon(ABC): # pylint: disable=too-few-public-methods, too-many-instance-
         Returns:
             int: The damage that this Pokemon inflicts on the other Pokemon during an attack.
         """
-        raise NotImplementedError
+        effectiveness = TypeEffectiveness.get_effectiveness(self.get_poketype(), other_pokemon.get_poketype())
+        damage = self.get_battle_power() * effectiveness
+        return damage
 
     def defend(self, damage: int) -> None:
         """
@@ -189,7 +199,12 @@ class Pokemon(ABC): # pylint: disable=too-few-public-methods, too-many-instance-
         Evolves the Pokemon to the next stage in its evolution line, and updates
           its attributes accordingly.
         """
-        raise NotImplementedError
+        next_evolution_index = self.evolution_line.index(self.name) + 1
+        self.name = self.evolution_line[next_evolution_index]
+        self.battle_power *= 1.5
+        self.health *= 1.5
+        self.speed *= 1.5
+        self.defence *= 1.5
 
     def is_alive(self) -> bool:
         """
@@ -205,4 +220,9 @@ class Pokemon(ABC): # pylint: disable=too-few-public-methods, too-many-instance-
         Return a string representation of the Pokemon instance in the format:
         <name> (Level <level>) with <health> health and <experience> experience
         """
-        return f"{self.name} (Level {self.level}) with {self.get_health()} health and {self.get_experience()} experience"
+        return f"{self.name} (Level {self.level}) with {self.get_health()} health \
+                and {self.get_experience()} experience"
+
+
+if __name__ == '__main__':
+    print(TypeEffectiveness.get_effectiveness(PokeType.ROCK, PokeType.FIRE))
